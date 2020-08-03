@@ -1,0 +1,61 @@
+var ClientUnitTests={};(function(){ClientUnitTests.tests={_getChromeStorageValue:function(cbk){async.auto({getNullValue:function(go_on){Client._getChromeStorageValue({key:"null_value"},go_on);},setTestValue:function(go_on){if(!Client._hasChromeStorage({})){return go_on();}
+chrome.storage.sync.set({test_value:"test"},go_on);},confirmNullValue:["getNullValue",function(go_on,res){if(!!res.getNullValue){return go_on([0,"Expected null value"]);}
+go_on();}],getTestValue:["setTestValue",function(go_on,res){Client._getChromeStorageValue({key:"test_value"},go_on);}],confirmTestValue:["getTestValue",function(go_on,res){if(!Client._hasChromeStorage({})){return go_on();}
+if(res.getTestValue!=="test"){return go_on([0,"Expected test value"]);}
+go_on();}],cleanUp:["confirmNullValue","confirmTestValue",function(go_on)
+{if(!Client._hasChromeStorage({})){return go_on();}
+chrome.storage.sync.clear(go_on);}]},cbk);},_hasChromeStorage:function(cbk){if(!Client._hasChromeStorage({})){return cbk();}
+try{if(!chrome.storage){return go_on([0,"Expected storage"]);}}
+catch(e){return go_on(e);}
+go_on();},_registerValue:function(cbk){var item={};var testKey="test";var testVal="_registerValue";var localStorageSupported=true;try{localStorage.setItem("test_local_storage","supported");localStorage.clear();}
+catch(e){localStorageSupported=false;}
+async.auto({registerValue:function(go_on){Client._registerValue({key:testKey,value:testVal},go_on);},confirmNoValue:["registerValue",function(go_on,res){if(localStorageSupported){return go_on();}
+if(!!res.registerValue){return go_on([0,"Expected no value"]);}}],confirmValueReturned:["registerValue",function(go_on,res){if(!localStorageSupported){return go_on();}
+if(res.registerValue!==testVal){return go_on([0,"Expected test value returned"]);}
+go_on();}],getStoredValue:["registerValue",function(go_on,res){if(!Client.isChromeApp({})){return go_on(null,localStorage[testKey]);}
+if(Client._hasChromeStorage({})){chrome.storage.sync.get(testKey,function(values){return go_on(null,values[testKey]);});return;}
+go_on();}],confirmStoredValue:["getStoredValue",function(go_on,res){if(res.getStoredValue!==testVal){return go_on([0,"Expected test value"]);}
+return go_on();}],cleanUp:["confirmNoValue","confirmStoredValue","confirmValueReturned",function(go_on,res)
+{Client.clearStorage({},go_on);}]},cbk);},analytics:function(cbk){async.auto({confirmTracker:function(go_on){if(!Client.isChromeApp({})){return go_on();}
+if(!Client._tracker){return go_on([0,"Expected tracker"]);}
+go_on();},confirmTrackingScript:function(go_on){if(!!Client.isChromeApp({})){return go_on();}
+var gaURL="https://ssl.google-analytics.com/ga.js";var noTracking=!$("script[src='"+gaURL+"']").length;if(noTracking){return go_on([0,"Expected tracking"]);}
+go_on();}},cbk);},clearStorage:function(cbk){async.auto({getUUID:function(go_on){Client.registerUUID({},go_on);},setChromeLocalStorageValue:function(go_on){if(!Client._hasChromeStorage({})){return go_on();}
+var chromeStorageString="test_chrome_storage";chrome.storage.local.set(chromeStorageString,function(){return go_on(null,chromeStorageString);});},setChromeSyncStorageValue:function(go_on){if(!Client._hasChromeStorage({})){return go_on();}
+var chromeStorageString="test_chrome_sync_storage";chrome.storage.sync.set(chromeStorageString,function(){return go_on(null,chromeStorageString);});},setLocalStorageValue:function(go_on){if(!!Client.isChromeApp({})){return go_on();}
+var localStorageString="test_local_storage";try{localStorage[localStorageString]=localStorageString;}
+catch(e){return go_on();}
+return go_on(null,localStorageString);},clearAllTokens:["getUUID","setChromeLocalStorageValue","setChromeSyncStorageValue","setLocalStorageValue",function(go_on,res)
+{Client.clearStorage({},go_on);}],getUUIDAfterClear:["clearAllTokens",function(go_on,res){Sync.getToken({key:"uuid"},go_on);}],confirmUUID:["getUUIDAfterClear",function(go_on,res){if(res.getUUID!==res.getUUIDAfterClear){return go_on([0,"Expected consistent UUID"]);}
+Client.clearStorage({clear_uuid:true},go_on);}],confirmNoChromeLocalStorageValue:["clearAllTokens",function(go_on,res)
+{if(!res.setChromeLocalStorageValue){return go_on();}
+var testString=res.setChromeLocalStorageValue;chrome.storage.local.get(testString,function(values){if(!!values[testString]){return go_on([0,"Expected no value"]);}
+go_on();});}],confirmNoChromeSyncStorageValue:["clearAllTokens",function(go_on,res)
+{if(!res.setChromeSyncStorageValue){return go_on();}
+var testString=res.setChromeSyncStorageValue;chrome.storage.sync.get(testString,function(values){if(!!values[testString]){return go_on([0,"Expected no value"]);}
+go_on();});}],confirmNoLocalStorageValue:["clearAllTokens",function(go_on,res)
+{if(!res.setLocalStorageValue){return go_on();}
+var testString=res.setLocalStorageValue;if(!!localStorage[testString]){return go_on([0,"Expected no value"]);}
+return go_on();}]},cbk);},getSetting:function(cbk){var size=1;async.auto({setFontSize:function(go_on){Client.setSetting({setting:"font_size",value:size},go_on);},getFontSize:["setFontSize",function(go_on,res){Client.getSetting({setting:"font_size"},go_on);}],confirmFontSize:["getFontSize",function(go_on,res){if(res.setFontSize!==parseInt(res.getFontSize)){return go_on([0,"Expected font size set"]);}
+go_on();}],cleanUp:["confirmFontSize",function(go_on,res){Client.clearStorage({},go_on);}]},cbk);},hasChromeAppDetails:function(cbk){if(!Client.hasChromeAppDetails({})){return cbk();}
+if(!chrome.app.getDetails()){return cbk([0,"Expected app details"]);}
+cbk();},isChromeApp:function(cbk){if(!Client.isChromeApp({})){return cbk();}
+if(!chrome.app.runtime.onLaunched){return cbk([0,"Expected chrome app"]);}
+cbk();},profile:function(cbk){var profile=Client.profile({});if(profile.app!=="mn"){return cbk([0,"Expected app"]);}
+if(!profile.count){return cbk([0,"Expected count"]);}
+if(!profile.version){return cbk([0,"Expected version"]);}
+cbk();},registerUUID:function(cbk){async.auto({supportsLocalStorage:function(go_on){try{localStorage.a="b";}catch(e){return go_on();}
+localStorage.clear();return go_on(null,true);},registerUUID:["supportsLocalStorage",function(go_on,res){Client.registerUUID({},go_on);}],getUUID:["registerUUID",function(go_on,res){Client.registerUUID({},go_on);}],confirmHasUUID:["getUUID",function(go_on,res){if(!res.supportsLocalStorage){return go_on();}
+if(!res.getUUID||res.getUUID!==res.registerUUID){return go_on([0,"Expected Client UUID"]);}
+go_on();}],clean:["confirmHasUUID",function(go_on,res){Client.clearStorage({clear_uuid:true},go_on);}]},cbk);},setSetting:function(cbk){var size=1;async.auto({supportsLocalStorage:function(go_on){try{localStorage.a="b";}catch(e){return go_on();}
+localStorage.clear();return go_on(null,true);},setFontSize:["supportsLocalStorage",function(go_on,res){Client.setSetting({setting:"font_size",value:size},go_on);}],confirmFontSizeSavedInChrome:["setFontSize",function(go_on,res)
+{if(!Client._hasChromeStorage({})){return go_on();}
+if(res.setFontSize!==size){return go_on([0,"Expected saved font size"]);}
+return go_on();}],confirmFontSizeSavedInNormalBrowser:["setFontSize","supportsLocalStorage",function(go_on,res)
+{if(Client._hasChromeStorage({})){return go_on();}
+if(!res.supportsLocalStorage){return go_on();}
+if(res.setFontSize!==size){return go_on([0,"Expected saved font size"]);}
+return go_on();}],confirmFontSizeNotSavedWhenLocalStorageNotSupported:["setFontSize","supportsLocalStorage",function(go_on,res)
+{if(!!res.supportsLocalStorage){return go_on();}
+if(!!res.setFontSize){return go_on([0,"Expected font size not set"]);}
+return go_on();}]},cbk);}};})();

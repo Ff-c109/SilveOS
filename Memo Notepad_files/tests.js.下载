@@ -1,0 +1,1 @@
+var Tests={};(function(){Page.addScript({url:"/js/tests/unit.js"});Tests.runUnitTests=function(args,cbk){UnitTests.run({},cbk);};})();

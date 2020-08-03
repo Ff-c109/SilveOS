@@ -1,0 +1,36 @@
+var SyncUnitTests={};(function(){SyncUnitTests.tests={_authXHR:function(cbk){var headers={};var xhr={setRequestHeader:function(key,value){headers[key]=value;}};Sync._authXHR({auth_block:"auth_block"})(xhr);if(headers.Authorization!=="Basic auth_block"){return cbk([0,"Expected authorization added"]);}
+if(!headers["X-Date"]){return cbk([0,"Expected date"]);}
+if(!headers["X-User-Profile"]){return cbk([0,"Expected profile"]);}
+cbk();},_chunkedArrayFromArray:function(cbk){var chunked=Sync._chunkedArrayFromArray({array:[1,2,3,4,5],max_chunk_size:2});if(chunked.length!==3){return cbk([0,"Expected chunks"]);}
+for(var i=0,chunk;chunk=chunked[i];i++){if(chunk.length>2){return cbk([0,"Expected max 2"]);}}
+cbk();},_dataNotesFromSyncNotes:function(cbk){var notes=Sync._dataNotesFromSyncNotes({sync_notes:[{deleted:true,locked:false,text_last_modified:new Date().toISOString()}]});if(notes[0].deleted!==1){return cbk([0,"Expected note deleted"]);}
+if(notes[0].locked!==0){return cbk([0,"Expected unlocked note"]);}
+if(notes[0].text_last_modified!==notes[0].last_modified){return cbk([0,"Expected last modified date"]);}
+cbk();},_getLinksFromHeader:function(cbk){var currentPath="/v0/objects/ff701684-1032-4187-bee9-7ba3cfa92d90:ff701684-1032-4187-bee9-7ba3cfa92d90/synced_after/2016-04-15T03:09:22.177Z/";var linksWithCurrent=Sync._getLinksFromHeader({link:"<"+currentPath+">; rel=\"current\""});if(linksWithCurrent.current!==currentPath){return cbk([0,"Expected current path"]);}
+var nextPath="/v0/notes/2016-04-13T08:45:28.441Z/";var linksWithNext=Sync._getLinksFromHeader({link:"<"+nextPath+">; rel=\"next\",<"+currentPath+">; rel=\"current\""});if(linksWithNext.next!==nextPath){return cbk([0,"Expected next path"]);}
+cbk();},_nextRefreshType:function(cbk){var requestStreamWhenSyncingNotes=Sync._nextRefreshType({current_type:"stream",requested_type:"notes"});if(requestStreamWhenSyncingNotes!=="all"){return cbk([0,"Expected added stream sync"]);}
+var requestNotesWhenSyncingStream=Sync._nextRefreshType({current_type:"notes",requested_type:"stream"});if(requestNotesWhenSyncingStream!=="all"){return cbk([0,"Expected added notes sync"]);}
+var requestStreamWhenSyncingStream=Sync._nextRefreshType({current_type:"stream",requested_type:"stream"});if(requestStreamWhenSyncingStream!=="stream"){return cbk([0,"Expected no sync expansion"]);}
+var requestNotesWhenSyncingNotes=Sync._nextRefreshType({current_type:"notes",requested_type:"notes"});if(requestNotesWhenSyncingNotes!=="notes"){return cbk([0,"Expected no sync expansion"]);}
+var noRequestedTypeSyncingNotes=Sync._nextRefreshType({current_type:"notes"});if(noRequestedTypeSyncingNotes!=="all"){return cbk([0,"Expected defaults to all"]);}
+var noRequestedTypeSyncingStream=Sync._nextRefreshType({current_type:"stream"});if(noRequestedTypeSyncingStream!=="all"){return cbk([0,"Expected standard sync as all"]);}
+var noRequestedTypeSyncingAll=Sync._nextRefreshType({current_type:"all"});if(noRequestedTypeSyncingAll!=="all"){return cbk([0,"Expected no expansion"]);}
+cbk();},_syncObjectsAsNotes:function(cbk){var notes=Sync._syncObjectsAsNotes({objects:[{stream_id:"stream_id",id:"event_id",type:"event"},{stream_id:"stream_id",id:"note_id",type:"note"}]});if(notes.length!==1){return cbk([0,"Expected only notes"]);}
+if(notes[0].id!=="stream_id:note_id"){return cbk([0,"Expected id turned into key"]);}
+if(notes[0].object_id!=="note_id"){return cbk([0,"Expected preserved object id"]);}
+cbk();},_updatesFromNotes:function(cbk){var start=new Date().toISOString();var updateToObject=[{created_at:start,deleted:1,deleted_last_modified:start,dirty_since:start,id:"personal_stream_id:sync_object_update",object_id:"sync_object_update",rev:1,stream_id:"personal_stream_id",text:"string",text_last_modified:start}]
+var objUpdate=Sync._updatesFromNotes({notes:updateToObject})[0];if(!!objUpdate.created_at){return cbk([0,"Expected no created date"]);}
+if(objUpdate.deleted!==true){return cbk([0,"Expected mutation to Bool"]);}
+if(!objUpdate.deleted_last_modified){return cbk([0,"Expected deleted time"]);}
+if(!!objUpdate.dirty_since){return cbk([0,"Expected no extraneous values"]);}
+if(objUpdate.id!=="sync_object_update"){return cbk([0,"Expected id swap"]);}
+if(!objUpdate.rev){return cbk([0,"Expected rev"]);}
+if(!objUpdate.stream_id){return cbk([0,"Expected stream"]);}
+if(!objUpdate.text||!objUpdate.text_last_modified){return cbk([0,"Expected modified text"]);}
+if(objUpdate.type!=="note"){return cbk([0,"Expected type for sync object"]);}
+cbk();},hasAuthIncludingCredentials:function(cbk){var credentialInputs=$("#account .email, #account .password");credentialInputs.val("test");Sync.hasAuthIncludingCredentials({},function(err,hasAuth){if(!!err){return cbk(err);}
+if(!hasAuth){return cbk([0,"Expected has auth"]);}
+credentialInputs.val("");cbk();});},isValidEmail:function(cbk){var validEmail="test@example.com";if(!Sync.isValidEmail({email:validEmail})){return cbk([0,"Expected valid email"]);}
+var invalidEmail="testemailexamplecom"
+if(Sync.isValidEmail({email:invalidEmail})){return cbk([0,"Expected valid email"]);}
+cbk();}};})();
